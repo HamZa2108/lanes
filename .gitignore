@@ -1,0 +1,21 @@
+# Backend
+lanes-backend/target/
+lanes-backend/.idea/
+lanes-backend/.vscode/
+lanes-backend/*.iml
+lanes-backend/HELP.md
+
+# Frontend (for Day 2)
+lanes-frontend/node_modules/
+lanes-frontend/dist/
+lanes-frontend/.angular/
+lanes-frontend/.vscode/
+lanes-frontend/*.log
+
+# Environment
+*.env
+.env.local
+
+# OS
+.DS_Store
+Thumbs.db
