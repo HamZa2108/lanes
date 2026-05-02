@@ -1,0 +1,169 @@
+<section class="max-w-[1400px] mx-auto px-6 py-8 animate-fade-in">
+  <div class="flex items-center gap-3 mb-6">
+    <a routerLink="/" class="text-sm text-gray-500 hover:text-gray-900 dark:hover:text-white transition flex items-center gap-2">
+      <svg viewBox="0 0 24 24" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M15 18l-6-6 6-6" stroke-linecap="round" stroke-linejoin="round" />
+      </svg>
+      All boards
+    </a>
+  </div>
+
+  @if (error()) {
+    <div class="mb-6 bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-900 text-red-700 dark:text-red-300 text-sm rounded-lg px-4 py-3 animate-fade-up">
+      {{ error() }}
+    </div>
+  }
+
+  @if (loading()) {
+    <div class="text-center py-16 animate-fade-in">
+      <div class="inline-flex items-center gap-3 text-sm text-gray-500">
+        <div class="w-4 h-4 border-2 border-gray-300 dark:border-gray-700 border-t-blue-500 rounded-full animate-spin"></div>
+        <span>Loading board...</span>
+      </div>
+      <p class="text-xs text-gray-400 dark:text-gray-600 mt-3">API cold start can take up to 30 seconds on first load.</p>
+    </div>
+  } @else if (board(); as b) {
+    <h1 class="text-2xl font-semibold text-gray-900 dark:text-white tracking-tight mb-6">{{ b.name }}</h1>
+
+    <div class="flex gap-4 items-start overflow-x-auto pb-4 min-h-[70vh]">
+      <div
+        cdkDropList
+        cdkDropListOrientation="horizontal"
+        [cdkDropListData]="b.lanes"
+        (cdkDropListDropped)="onLaneDrop($event)"
+        id="lanes-row"
+        class="flex gap-4 items-start"
+      >
+        @for (lane of b.lanes; track lane.id) {
+          <div
+            cdkDrag
+            [cdkDragData]="lane"
+            class="shrink-0 w-80 bg-white dark:bg-gray-900/60 border border-gray-200 dark:border-gray-800 rounded-xl flex flex-col max-h-[calc(100vh-200px)]"
+          >
+            <header cdkDragHandle class="flex items-center gap-2 px-4 py-3 border-b border-gray-200 dark:border-gray-800 cursor-grab active:cursor-grabbing">
+              @if (deletingLaneId() === lane.id) {
+                <div class="flex-1 min-w-0">
+                  <p class="text-sm text-gray-700 dark:text-gray-300 mb-2">
+                    Delete "<span class="font-medium text-gray-900 dark:text-white">{{ lane.name }}</span>" and all its cards?
+                  </p>
+                  <div class="flex gap-2">
+                    <button type="button" (click)="cancelDeleteLane()" class="flex-1 px-2 py-1 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-xs text-gray-700 dark:text-gray-200 rounded transition">Cancel</button>
+                    <button type="button" (click)="confirmDeleteLane(lane.id)" class="flex-1 px-2 py-1 bg-red-600 hover:bg-red-500 text-xs text-white rounded transition">Delete</button>
+                  </div>
+                </div>
+              } @else if (editingLaneId() === lane.id) {
+                <form [formGroup]="editLaneForm" (ngSubmit)="saveEditLane(lane.id)" class="flex gap-1 flex-1 min-w-0">
+                  <input type="text" formControlName="name" class="flex-1 min-w-0 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded px-2 py-1 text-sm text-gray-900 dark:text-white focus:outline-none focus:border-blue-500" />
+                  <button type="submit" class="px-2 py-1 bg-blue-600 hover:bg-blue-500 text-white text-xs rounded transition">Save</button>
+                  <button type="button" (click)="cancelEditLane()" class="px-2 py-1 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-xs text-gray-700 dark:text-gray-200 rounded transition">Cancel</button>
+                </form>
+              } @else {
+                <h3 class="flex-1 font-medium text-gray-900 dark:text-white truncate">{{ lane.name }}</h3>
+                <span class="text-xs text-gray-500 tabular-nums">{{ lane.cards.length }}</span>
+                <button type="button" (click)="startEditLane(lane)" aria-label="Rename lane" class="p-1 text-gray-400 hover:text-gray-900 dark:hover:text-white rounded transition">
+                  <svg viewBox="0 0 24 24" class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 20h9M16.5 3.5a2.121 2.121 0 113 3L7 19l-4 1 1-4L16.5 3.5z" stroke-linecap="round" stroke-linejoin="round" />
+                  </svg>
+                </button>
+                <button type="button" (click)="askDeleteLane(lane.id)" aria-label="Delete lane" class="p-1 text-gray-400 hover:text-red-600 dark:hover:text-red-400 rounded transition">
+                  <svg viewBox="0 0 24 24" class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6" stroke-linecap="round" stroke-linejoin="round" />
+                  </svg>
+                </button>
+              }
+            </header>
+
+            <div
+              cdkDropList
+              [id]="'lane-' + lane.id"
+              [cdkDropListData]="lane.cards"
+              [cdkDropListConnectedTo]="laneIds()"
+              (cdkDropListDropped)="onCardDrop($event)"
+              class="flex-1 overflow-y-auto p-2 space-y-2 min-h-[40px]"
+            >
+              @for (card of lane.cards; track card.id) {
+                <div cdkDrag class="bg-gray-50 dark:bg-gray-900/80 border border-gray-200 dark:border-gray-800 hover:border-gray-300 dark:hover:border-gray-700 rounded-lg p-3 transition cursor-grab active:cursor-grabbing">
+                  @if (deletingCardId() === card.id) {
+                    <p class="text-sm text-gray-700 dark:text-gray-300 mb-2">Delete this card?</p>
+                    <div class="flex gap-2">
+                      <button type="button" (click)="cancelDeleteCard()" class="flex-1 px-2 py-1 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-xs text-gray-700 dark:text-gray-200 rounded transition">Cancel</button>
+                      <button type="button" (click)="confirmDeleteCard(card.id)" class="flex-1 px-2 py-1 bg-red-600 hover:bg-red-500 text-xs text-white rounded transition">Delete</button>
+                    </div>
+                  } @else if (editingCardId() === card.id) {
+                    <form [formGroup]="editCardForm" (ngSubmit)="saveEditCard(card.id)" class="space-y-2">
+                      <input type="text" formControlName="title" placeholder="Title" class="w-full bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded px-2 py-1.5 text-sm text-gray-900 dark:text-white focus:outline-none focus:border-blue-500" />
+                      <textarea formControlName="description" rows="3" placeholder="Add a description (optional)" class="w-full bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded px-2 py-1.5 text-sm text-gray-700 dark:text-gray-200 placeholder:text-gray-400 dark:placeholder:text-gray-600 resize-none focus:outline-none focus:border-blue-500"></textarea>
+                      <div class="flex gap-2">
+                        <button type="submit" class="flex-1 px-2 py-1 bg-blue-600 hover:bg-blue-500 text-white text-xs rounded transition">Save</button>
+                        <button type="button" (click)="cancelEditCard()" class="flex-1 px-2 py-1 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-xs text-gray-700 dark:text-gray-200 rounded transition">Cancel</button>
+                      </div>
+                    </form>
+                  } @else {
+                    <div class="group">
+                      <div class="flex items-start justify-between gap-2 mb-1">
+                        <p class="flex-1 text-sm text-gray-900 dark:text-white leading-snug">{{ card.title }}</p>
+                        <div class="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition shrink-0">
+                          <button type="button" (click)="startEditCard(card)" aria-label="Edit card" class="p-1 text-gray-400 hover:text-gray-900 dark:hover:text-white rounded transition">
+                            <svg viewBox="0 0 24 24" class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2">
+                              <path d="M12 20h9M16.5 3.5a2.121 2.121 0 113 3L7 19l-4 1 1-4L16.5 3.5z" stroke-linecap="round" stroke-linejoin="round" />
+                            </svg>
+                          </button>
+                          <button type="button" (click)="askDeleteCard(card.id)" aria-label="Delete card" class="p-1 text-gray-400 hover:text-red-600 dark:hover:text-red-400 rounded transition">
+                            <svg viewBox="0 0 24 24" class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2">
+                              <path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6" stroke-linecap="round" stroke-linejoin="round" />
+                            </svg>
+                          </button>
+                        </div>
+                      </div>
+                      @if (card.description) {
+                        <p class="text-xs text-gray-600 dark:text-gray-500 leading-relaxed whitespace-pre-wrap">{{ card.description }}</p>
+                      }
+                    </div>
+                  }
+                </div>
+              }
+            </div>
+
+            <div class="p-2 border-t border-gray-200 dark:border-gray-800">
+              @if (addingCardInLaneId() === lane.id) {
+                <form [formGroup]="newCardForm" (ngSubmit)="saveNewCard(lane.id)" class="space-y-2">
+                  <input type="text" formControlName="title" placeholder="Card title" class="w-full bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded px-2 py-1.5 text-sm text-gray-900 dark:text-white focus:outline-none focus:border-blue-500" />
+                  <div class="flex gap-2">
+                    <button type="submit" [disabled]="newCardForm.invalid" class="flex-1 px-2 py-1 bg-blue-600 hover:bg-blue-500 disabled:bg-gray-200 dark:disabled:bg-gray-800 disabled:text-gray-400 dark:disabled:text-gray-500 text-white text-xs rounded transition">Add</button>
+                    <button type="button" (click)="cancelAddCard()" class="flex-1 px-2 py-1 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-xs text-gray-700 dark:text-gray-200 rounded transition">Cancel</button>
+                  </div>
+                </form>
+              } @else {
+                <button type="button" (click)="startAddCard(lane.id)" class="w-full px-3 py-2 text-left text-sm text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800/50 rounded transition">
+                  + Add a card
+                </button>
+              }
+            </div>
+          </div>
+        }
+      </div>
+
+      <div class="shrink-0 w-72">
+        @if (addingLane()) {
+          <form [formGroup]="newLaneForm" (ngSubmit)="saveNewLane()" class="bg-white dark:bg-gray-900/60 border border-gray-200 dark:border-gray-800 rounded-xl p-3 space-y-2">
+            <input type="text" formControlName="name" placeholder="Lane name" class="w-full bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded px-3 py-2 text-sm text-gray-900 dark:text-white focus:outline-none focus:border-blue-500" />
+            <div class="flex gap-2">
+              <button type="submit" [disabled]="newLaneForm.invalid" class="flex-1 px-3 py-2 bg-blue-600 hover:bg-blue-500 disabled:bg-gray-200 dark:disabled:bg-gray-800 disabled:text-gray-400 dark:disabled:text-gray-500 text-white text-sm rounded transition">Add lane</button>
+              <button type="button" (click)="cancelAddLane()" class="flex-1 px-3 py-2 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-sm text-gray-700 dark:text-gray-200 rounded transition">Cancel</button>
+            </div>
+          </form>
+        } @else {
+          <button type="button" (click)="startAddLane()" class="w-full px-4 py-3 bg-gray-50 dark:bg-gray-900/40 border border-dashed border-gray-300 dark:border-gray-800 hover:border-gray-400 dark:hover:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-900/60 rounded-xl text-sm text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition">
+            + Add a lane
+          </button>
+        }
+      </div>
+    </div>
+
+    @if (b.lanes.length === 0 && !addingLane()) {
+      <div class="text-center py-8 text-sm text-gray-500">
+        Add a lane to get started. Try "To do", "In progress", "Done".
+      </div>
+    }
+  }
+</section>

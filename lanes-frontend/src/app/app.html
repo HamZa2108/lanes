@@ -1,0 +1,54 @@
+<div class="min-h-screen flex flex-col">
+  <header class="sticky top-0 z-20 backdrop-blur bg-white/70 dark:bg-gray-950/70 border-b border-gray-200 dark:border-gray-800">
+    <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+      <a routerLink="/" class="flex items-center gap-2 text-gray-900 dark:text-white font-semibold tracking-tight hover:text-blue-600 dark:hover:text-blue-400 transition">
+        <svg viewBox="0 0 24 24" class="w-6 h-6 text-blue-500" fill="currentColor">
+          <rect x="3" y="4" width="4" height="16" rx="1.5"/>
+          <rect x="10" y="4" width="4" height="10" rx="1.5"/>
+          <rect x="17" y="4" width="4" height="13" rx="1.5"/>
+        </svg>
+        <span>Lanes</span>
+      </a>
+
+      <div class="flex items-center gap-1">
+        <button
+          type="button"
+          (click)="clearSession()"
+          class="px-3 py-2 text-sm text-gray-500 hover:text-red-600 dark:hover:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition"
+        >
+          Clear session
+        </button>
+
+        <button
+          type="button"
+          (click)="toggleTheme()"
+          [attr.aria-label]="theme() === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'"
+          class="p-2 text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition"
+        >
+          @if (theme() === 'dark') {
+            <svg viewBox="0 0 24 24" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="5"/>
+              <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+            </svg>
+          } @else {
+            <svg viewBox="0 0 24 24" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+            </svg>
+          }
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="flex-1">
+    <router-outlet></router-outlet>
+  </main>
+
+  <footer class="border-t border-gray-200 dark:border-gray-900 mt-20">
+    <div class="max-w-7xl mx-auto px-6 py-6 text-xs text-gray-500 flex items-center justify-between">
+      <span>Built by Hamza Zine</span>
+      <a href="https://github.com/HamZa2108/lanes" target="_blank" rel="noopener"
+         class="hover:text-gray-700 dark:hover:text-gray-300 transition">GitHub</a>
+    </div>
+  </footer>
+</div>

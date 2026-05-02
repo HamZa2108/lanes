@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <script>
+    (function () {
+      try {
+        var stored = localStorage.getItem('lanes.theme');
+        var theme = stored || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        if (theme === 'dark') {
+          document.documentElement.classList.add('dark');
+        }
+      } catch (e) {}
+    })();
+  </script>
+  <meta charset="utf-8">
+  <title>Lanes — minimalist kanban</title>
+  <base href="/">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="A minimalist kanban board with drag-and-drop, click tracking, and no signup. Ship tasks, not screenshots.">
+  <meta name="theme-color" content="#0a0a0a">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <meta property="og:title" content="Lanes — minimalist kanban">
+  <meta property="og:description" content="A minimalist kanban board with drag-and-drop, no signup.">
+  <meta property="og:type" content="website">
+</head>
+<body>
+<app-root></app-root>
+</body>
+</html>
